@@ -2,16 +2,24 @@ import { Action } from '@reduxjs/toolkit';
 import { createEpicMiddleware } from 'redux-observable';
 import { configureStore } from '@reduxjs/toolkit';
 import { reducers } from './app.reducers';
-import { rootEpic$ } from './app.epic';
-import { fetchSlice } from '../scenarios/fetch.slice';
+import { appEpic$ } from './app.epic';
+import { appSlice } from './app.slice';
+import { EpicDependencies } from './app.epics.type';
+import { fetchApi } from './app.api';
 
-const epicMiddleware = createEpicMiddleware<Action, Action>();
+const epicDependencies: EpicDependencies = {
+  fetchApi,
+};
+
+const epicMiddleware = createEpicMiddleware<Action, Action>({
+  dependencies: epicDependencies,
+});
 
 export const store = configureStore({
   reducer: reducers,
   middleware: [epicMiddleware],
 });
 
-epicMiddleware.run(rootEpic$ as any);
+epicMiddleware.run(appEpic$ as any);
 
-store.dispatch(fetchSlice.actions.fetchUser({ id: '1' }));
+store.dispatch(appSlice.actions.fetchUser({ id: '1' }));

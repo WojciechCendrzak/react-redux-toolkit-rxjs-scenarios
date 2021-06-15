@@ -1,9 +1,9 @@
-import { fetchSlice, FetchState } from '../scenarios/fetch.slice';
+import { appSlice, AppState } from './app.slice';
 
 export interface StoreState {
-  fetch: FetchState;
+  fetch: AppState;
 }
 
 export const reducers = {
-  fetch: fetchSlice.reducer,
+  fetch: appSlice.reducer,
 };
