@@ -14,7 +14,7 @@ export const appSlice = createSlice({
   reducers: {
     ping: () => {},
     pong: () => {},
-    endGate: () => {},
+    endGame: () => {},
     login: (
       _state,
       _action: PayloadAction<{ login: string; password: string }>

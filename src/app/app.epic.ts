@@ -1,31 +1,32 @@
 import { combineEpics } from 'redux-observable';
 import { forkJoin, from } from 'rxjs';
-import { filter, map, switchMap, tap } from 'rxjs/operators';
+import { filter, map, switchMap } from 'rxjs/operators';
 import { RootEpic } from './app.epics.type';
 import { appSlice } from './app.slice';
 
-const ping$: RootEpic = (action$) =>
+export const ping$: RootEpic = (action$) =>
   action$.pipe(
     filter(appSlice.actions.ping.match),
     map(() => appSlice.actions.pong())
   );
 
-const pong$: RootEpic = (action$) =>
+export const pong$: RootEpic = (action$) =>
   action$.pipe(
     filter(appSlice.actions.pong.match),
-    map(() => appSlice.actions.endGate())
+    map(() => appSlice.actions.endGame())
   );
 
-const fetchSingleEntity$: RootEpic = (action$, _, { fetchApi }) =>
+// single fetch
+export const fetchUser$: RootEpic = (action$, _, { fetchApi }) =>
   action$.pipe(
     filter(appSlice.actions.fetchUser.match),
     map((action) => action.payload.id),
     switchMap((id) => from(fetchApi.fetchUser(id))),
-    tap(() => console.log('fetchSingleEntity')),
     map((user) => appSlice.actions.setUser({ user }))
   );
 
-const fetchMultiplyEntitesInSequence$: RootEpic = (action$, _, { fetchApi }) =>
+// multiple fetch in sequence - next input depends on previous output
+export const login$: RootEpic = (action$, _, { fetchApi }) =>
   action$.pipe(
     filter(appSlice.actions.login.match),
     switchMap((action) => from(fetchApi.login(action.payload))),
@@ -33,7 +34,8 @@ const fetchMultiplyEntitesInSequence$: RootEpic = (action$, _, { fetchApi }) =>
     map((user) => appSlice.actions.setUser({ user }))
   );
 
-const fetchMultiplyEntitesInParallel$: RootEpic = (action$, _, { fetchApi }) =>
+// multiple fetch in parallel
+export const uploadPhotos$: RootEpic = (action$, _, { fetchApi }) =>
   action$.pipe(
     filter(appSlice.actions.uploadPhotos.match),
     map((action) => action.payload.files),
@@ -50,7 +52,7 @@ const fetchMultiplyEntitesInParallel$: RootEpic = (action$, _, { fetchApi }) =>
 export const appEpic$ = combineEpics(
   ping$,
   pong$,
-  fetchSingleEntity$,
-  fetchMultiplyEntitesInSequence$,
-  fetchMultiplyEntitesInParallel$
+  fetchUser$,
+  login$,
+  uploadPhotos$
 );

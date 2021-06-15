@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "test": "jest",
+    "test": "jest --verbose",
     "eslint": "eslint src/**/*.ts",
     "tsc": "tsc --project tsconfig.json --skipLibCheck --noEmit",
     "lint": "yarn eslint && yarn tsc"
