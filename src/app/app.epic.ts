@@ -1,6 +1,6 @@
 import { combineEpics } from 'redux-observable';
-import { forkJoin, from } from 'rxjs';
-import { filter, map, switchMap } from 'rxjs/operators';
+import { forkJoin, from, of } from 'rxjs';
+import { filter, map, mergeMap, switchMap } from 'rxjs/operators';
 import { RootEpic } from './app.epics.type';
 import { appSlice } from './app.slice';
 
@@ -23,6 +23,15 @@ export const fetchUser$: RootEpic = (action$, _, { fetchApi }) =>
     map((action) => action.payload.id),
     switchMap((id) => from(fetchApi.fetchUser(id))),
     map((user) => appSlice.actions.setUser({ user }))
+  );
+
+// single fetch but not cancel previous epic
+export const fetchProduct$: RootEpic = (action$, _, { fetchApi }) =>
+  action$.pipe(
+    filter(appSlice.actions.fetchProduct.match),
+    map((action) => action.payload.id),
+    mergeMap((id) => from(fetchApi.fetchProduct(id))),
+    map((product) => appSlice.actions.setProduct({ product }))
   );
 
 // multiple fetch in sequence - next input depends on previous output
@@ -48,6 +57,23 @@ export const uploadPhotos$: RootEpic = (action$, _, { fetchApi }) =>
       })
     )
   );
+
+// return more than one result
+export const logout$: RootEpic = (action$, _, { fetchApi }) =>
+  action$.pipe(
+    filter(appSlice.actions.logout.match),
+    switchMap(() => from(fetchApi.logout())),
+    // TODO: maybe just concat map
+    switchMap(() =>
+      of(appSlice.actions.reset(), appSlice.actions.navigateHome())
+    )
+  );
+
+// TODO:
+// web sockets
+// trothle
+// debounce
+// search for other projects
 
 export const appEpic$ = combineEpics(
   ping$,
