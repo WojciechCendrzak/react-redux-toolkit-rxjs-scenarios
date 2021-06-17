@@ -6,6 +6,7 @@ export interface AppState {
   photoUrls?: string[];
   producById: Record<string, Product>;
   messages: string[];
+  products?: Product[];
 }
 
 export const initialAppState: AppState = {
@@ -43,6 +44,13 @@ export const appSlice = createSlice({
     startListeningFromWebSocket: () => {},
     setMessage: (state, action: PayloadAction<{ message: string }>) => {
       state.messages.push(action.payload.message);
+    },
+    searchProduct: (
+      _state,
+      _action: PayloadAction<{ searchPhrase: string }>
+    ) => {},
+    setProducts: (state, action: PayloadAction<{ products: Product[] }>) => {
+      state.products = action.payload.products;
     },
   },
 });

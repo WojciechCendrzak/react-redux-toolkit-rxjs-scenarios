@@ -14,6 +14,8 @@ export const api = {
     fakeAsync<{ url: string }>({ url: '//some-photo' }),
   logout: () => fakeAsync(),
   startWebSocketClient: () => new WebSocket('ws://localhost:8080'),
+  searchProducts: (searchPhrase: string) =>
+    fakeAsync<Product[]>([{ id: '1', name: `${searchPhrase} 1` }]),
 };
 
 export type Api = typeof api;

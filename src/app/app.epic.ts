@@ -1,6 +1,6 @@
 import { combineEpics } from 'redux-observable';
-import { forkJoin, from, fromEventPattern, of } from 'rxjs';
-import { filter, map, mergeMap, switchMap } from 'rxjs/operators';
+import { asyncScheduler, forkJoin, from, fromEventPattern, of } from 'rxjs';
+import { filter, map, mergeMap, switchMap, throttleTime } from 'rxjs/operators';
 import { RootEpic } from './app.epics.type';
 import { appSlice } from './app.slice';
 
@@ -84,11 +84,26 @@ export const startListeningFromWebSocket$: RootEpic = (action$, _, { api }) =>
     map((message) => appSlice.actions.setMessage({ message }))
   );
 
-// TODO:
-// web sockets
-// trothle
-// debounce
-// search for other projects
+// avoid multiply clicking
+export const loginThrottle$: RootEpic = (action$, _, { api }) =>
+  action$.pipe(
+    filter(appSlice.actions.login.match),
+    throttleTime(150),
+    switchMap((action) => from(api.login(action.payload))),
+    switchMap((response) => from(api.fetchUser(response.id))),
+    map((user) => appSlice.actions.setUser({ user }))
+  );
+
+export const searchProduct$: RootEpic = (action$, _, { api }) =>
+  action$.pipe(
+    filter(appSlice.actions.searchProduct.match),
+    throttleTime(250, asyncScheduler, {
+      leading: true,
+      trailing: true,
+    }),
+    mergeMap((action) => from(api.searchProducts(action.payload.searchPhrase))),
+    map((response) => appSlice.actions.setProducts({ products: response }))
+  );
 
 export const appEpic$ = combineEpics(
   ping$,
