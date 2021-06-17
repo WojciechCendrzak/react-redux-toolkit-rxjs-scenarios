@@ -5,10 +5,10 @@ import { reducers } from './app.reducers';
 import { appEpic$ } from './app.epic';
 import { appSlice } from './app.slice';
 import { EpicDependencies } from './app.epics.type';
-import { fetchApi } from './app.api';
+import { api } from './app.api';
 
 const epicDependencies: EpicDependencies = {
-  fetchApi,
+  api: api,
 };
 
 const epicMiddleware = createEpicMiddleware<Action, Action>({

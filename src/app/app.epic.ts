@@ -1,5 +1,5 @@
 import { combineEpics } from 'redux-observable';
-import { forkJoin, from, of } from 'rxjs';
+import { forkJoin, from, fromEventPattern, of } from 'rxjs';
 import { filter, map, mergeMap, switchMap } from 'rxjs/operators';
 import { RootEpic } from './app.epics.type';
 import { appSlice } from './app.slice';
@@ -17,39 +17,39 @@ export const pong$: RootEpic = (action$) =>
   );
 
 // single fetch
-export const fetchUser$: RootEpic = (action$, _, { fetchApi }) =>
+export const fetchUser$: RootEpic = (action$, _, { api }) =>
   action$.pipe(
     filter(appSlice.actions.fetchUser.match),
     map((action) => action.payload.id),
-    switchMap((id) => from(fetchApi.fetchUser(id))),
+    switchMap((id) => from(api.fetchUser(id))),
     map((user) => appSlice.actions.setUser({ user }))
   );
 
 // single fetch but not cancel previous epic
-export const fetchProduct$: RootEpic = (action$, _, { fetchApi }) =>
+export const fetchProduct$: RootEpic = (action$, _, { api }) =>
   action$.pipe(
     filter(appSlice.actions.fetchProduct.match),
     map((action) => action.payload.id),
-    mergeMap((id) => from(fetchApi.fetchProduct(id))),
+    mergeMap((id) => from(api.fetchProduct(id))),
     map((product) => appSlice.actions.setProduct({ product }))
   );
 
 // multiple fetch in sequence - next input depends on previous output
-export const login$: RootEpic = (action$, _, { fetchApi }) =>
+export const login$: RootEpic = (action$, _, { api }) =>
   action$.pipe(
     filter(appSlice.actions.login.match),
-    switchMap((action) => from(fetchApi.login(action.payload))),
-    switchMap((response) => from(fetchApi.fetchUser(response.id))),
+    switchMap((action) => from(api.login(action.payload))),
+    switchMap((response) => from(api.fetchUser(response.id))),
     map((user) => appSlice.actions.setUser({ user }))
   );
 
 // multiple fetch in parallel
-export const uploadPhotos$: RootEpic = (action$, _, { fetchApi }) =>
+export const uploadPhotos$: RootEpic = (action$, _, { api }) =>
   action$.pipe(
     filter(appSlice.actions.uploadPhotos.match),
     map((action) => action.payload.files),
     switchMap((files) =>
-      forkJoin(files.map((file) => from(fetchApi.uploadPhoto(file))))
+      forkJoin(files.map((file) => from(api.uploadPhoto(file))))
     ),
     map((results) =>
       appSlice.actions.setPhotos({
@@ -59,14 +59,29 @@ export const uploadPhotos$: RootEpic = (action$, _, { fetchApi }) =>
   );
 
 // return more than one result
-export const logout$: RootEpic = (action$, _, { fetchApi }) =>
+export const logout$: RootEpic = (action$, _, { api }) =>
   action$.pipe(
     filter(appSlice.actions.logout.match),
-    switchMap(() => from(fetchApi.logout())),
+    switchMap(() => from(api.logout())),
     // TODO: maybe just concat map
     switchMap(() =>
       of(appSlice.actions.reset(), appSlice.actions.navigateHome())
     )
+  );
+
+export const startListeningFromWebSocket$: RootEpic = (action$, _, { api }) =>
+  action$.pipe(
+    filter(appSlice.actions.startListeningFromWebSocket.match),
+    map(() => api.startWebSocketClient()),
+    // mamybe just flatMap ???
+    mergeMap((webSocketClient) =>
+      fromEventPattern<MessageEvent<string>>(
+        (handler) => webSocketClient.addEventListener('message', handler),
+        (handler) => webSocketClient.removeEventListener('message', handler)
+      )
+    ),
+    map((event) => event.data),
+    map((message) => appSlice.actions.setMessage({ message }))
   );
 
 // TODO:
@@ -80,5 +95,6 @@ export const appEpic$ = combineEpics(
   pong$,
   fetchUser$,
   login$,
-  uploadPhotos$
+  uploadPhotos$,
+  startListeningFromWebSocket$
 );

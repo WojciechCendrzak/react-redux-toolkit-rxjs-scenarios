@@ -1,7 +1,7 @@
 import { fakeAsync } from '../logic/fakeAsync';
 import { User, Entity, Product } from './app.model';
 
-export const fetchApi = {
+export const api = {
   login: (payload: { login: string; password: string }) =>
     fakeAsync<Entity>({
       id: '1',
@@ -13,6 +13,7 @@ export const fetchApi = {
   uploadPhoto: (file: File) =>
     fakeAsync<{ url: string }>({ url: '//some-photo' }),
   logout: () => fakeAsync(),
+  startWebSocketClient: () => new WebSocket('ws://localhost:8080'),
 };
 
-export type FetchApi = typeof fetchApi;
+export type Api = typeof api;

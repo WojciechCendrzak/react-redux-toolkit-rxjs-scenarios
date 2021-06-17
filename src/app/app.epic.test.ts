@@ -1,6 +1,6 @@
 import { appSlice } from './app.slice';
 import { Epic, StateObservable } from 'redux-observable';
-import { Observable, of } from 'rxjs';
+import { from, Observable, of } from 'rxjs';
 import { eachValueFrom } from 'rxjs-for-await';
 import {
   fetchUser$,
@@ -9,9 +9,11 @@ import {
   uploadPhotos$,
   logout$,
   fetchProduct$,
+  startListeningFromWebSocket$,
 } from './app.epic';
 import { Product, User } from './app.model';
 import { fakeAsync } from '../logic/fakeAsync';
+import WS from 'jest-websocket-mock';
 
 const {
   actions: {
@@ -27,6 +29,8 @@ const {
     navigateHome,
     fetchProduct,
     setProduct,
+    startListeningFromWebSocket,
+    setMessage,
   },
 } = appSlice;
 
@@ -78,7 +82,7 @@ describe('single fetch and cancel previous', () => {
   test(`${fetchUser$.name} ones`, async () => {
     const input = [fetchUser({ id: '1' })];
     const dependencies = {
-      fetchApi: { fetchUser: (id: string) => fakeAsync(user1) },
+      api: { fetchUser: (id: string) => fakeAsync(user1) },
     };
     const expected = [setUser({ user: user1 })];
     const output = await getEpicOutput(fetchUser$, input, null, dependencies);
@@ -89,7 +93,7 @@ describe('single fetch and cancel previous', () => {
   test(`${fetchUser$.name} twice`, async () => {
     const input = [fetchUser({ id: '1' }), fetchUser({ id: '2' })];
     const dependencies = {
-      fetchApi: {
+      api: {
         fetchUser: (id: string) =>
           id === '1' ? fakeAsync(user1) : fakeAsync(user2),
       },
@@ -105,7 +109,7 @@ describe('single fetch but not cancel previous', () => {
   test(fetchProduct$.name, async () => {
     const input = [fetchProduct({ id: '1' }), fetchProduct({ id: '2' })];
     const dependencies = {
-      fetchApi: {
+      api: {
         fetchProduct: (id: string) =>
           fakeAsync(id === '1' ? product1 : product2),
       },
@@ -131,7 +135,7 @@ describe('multiple fetch in sequence', () => {
   test(login$.name, async () => {
     const input = [login({ login: 'fake login', password: 'fake password' })];
     const dependencies = {
-      fetchApi: {
+      api: {
         login: () => fakeAsync({}),
         fetchUser: () => fakeAsync(user1),
       },
@@ -151,7 +155,7 @@ describe('multiple fetch in parallel', () => {
       uploadPhotos({ files: ['1', '2', '3'] as unknown as File[] }),
     ];
     const dependencies = {
-      fetchApi: {
+      api: {
         uploadPhoto: (val: any) => fakeAsync({ url: val }),
       },
     };
@@ -172,9 +176,41 @@ describe('multiple fetch in parallel', () => {
 describe('return more than one action', () => {
   test(logout$.name, async () => {
     const input = [logout()];
-    const dependencies = { fetchApi: { logout: fakeAsync } };
+    const dependencies = { api: { logout: fakeAsync } };
     const expected = [reset(), navigateHome()];
     const output = await getEpicOutput(logout$, input, null, dependencies);
+
+    expect(JSON.stringify(output, null, 2)).toBe(
+      JSON.stringify(expected, null, 2)
+    );
+  });
+});
+
+describe('web socket recieiving', () => {
+  test(startListeningFromWebSocket$.name, async () => {
+    const input = [startListeningFromWebSocket()];
+    const WEB_SOCKET_URL = 'ws://localhost:1234';
+    const server = new WS(WEB_SOCKET_URL);
+    const dependencies = {
+      api: { startWebSocketClient: () => new WebSocket(WEB_SOCKET_URL) },
+    };
+    const expected = [
+      setMessage({ message: 'message 1' }),
+      setMessage({ message: 'message 2' }),
+    ];
+    const output$ = startListeningFromWebSocket$(
+      from(input),
+      null as any,
+      dependencies as any
+    );
+    const output: any[] = [];
+    const outputObserver = output$.subscribe({
+      next: (value: any) => output.push(value),
+    });
+
+    server.send('message 1');
+    server.send('message 2');
+    outputObserver.unsubscribe();
 
     expect(JSON.stringify(output, null, 2)).toBe(
       JSON.stringify(expected, null, 2)

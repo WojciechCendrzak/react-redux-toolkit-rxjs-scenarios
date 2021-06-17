@@ -5,10 +5,12 @@ export interface AppState {
   user?: User;
   photoUrls?: string[];
   producById: Record<string, Product>;
+  messages: string[];
 }
 
 export const initialAppState: AppState = {
   producById: {},
+  messages: [],
 };
 
 export const appSlice = createSlice({
@@ -38,5 +40,9 @@ export const appSlice = createSlice({
     logout: () => {},
     reset: () => initialAppState,
     navigateHome: () => {},
+    startListeningFromWebSocket: () => {},
+    setMessage: (state, action: PayloadAction<{ message: string }>) => {
+      state.messages.push(action.payload.message);
+    },
   },
 });
