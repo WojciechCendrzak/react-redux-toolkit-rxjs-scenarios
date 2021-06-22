@@ -1,5 +1,5 @@
 import { appSlice } from './app.slice';
-import { Epic, StateObservable } from 'redux-observable';
+import { Epic } from 'redux-observable';
 import { from, Observable, of } from 'rxjs';
 import { eachValueFrom } from 'rxjs-for-await';
 import {
@@ -42,8 +42,6 @@ const observableToArray = async (source$: Observable<any>) => {
   return result;
 };
 
-const state$ = {} as StateObservable<null>;
-
 const user1: User = { id: '1', firstName: 'name 1', lastName: 'surname 1' };
 const user2: User = { id: '2', firstName: 'name 2', lastName: 'surname 2' };
 const product1: Product = { id: '1', name: 'product name' };
@@ -53,7 +51,7 @@ const credentials = { login: 'fake login', password: 'fake password' };
 const getEpicOutput = async (
   epic: Epic,
   input: any[],
-  state?: any,
+  state$?: any,
   dependencies?: any
 ) => {
   const output$ = epic(of(...input), state$, dependencies);

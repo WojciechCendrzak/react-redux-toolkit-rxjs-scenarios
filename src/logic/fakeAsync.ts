@@ -1,12 +1,16 @@
 type FakeAsync = {
   (): Promise<void>;
-  <R>(result: R): Promise<R>;
+  <R>(result: R, isError?: boolean): Promise<R>;
 };
 
-export const fakeAsync: FakeAsync = <R>(result?: R) =>
+export const fakeAsync: FakeAsync = <R>(result?: R, isError?: boolean) =>
   result
-    ? new Promise<R>((resolve) => resolve(result))
-    : new Promise<void>((resolve) => resolve());
+    ? new Promise<R>((resolve, reject) =>
+        !isError ? resolve(result) : reject(result)
+      )
+    : new Promise<void>((resolve, reject) =>
+        !isError ? resolve() : reject(result)
+      );
 
 // Just other way to overload function
 

@@ -28,7 +28,7 @@ const credentials = { login: 'fake login', password: 'fake password' };
 const getEpicOutput = async (
   epic: Epic,
   input: any[],
-  state?: any,
+  state$?: any,
   dependencies?: any
 ) => {
   const output$ = epic(of(...input), state$, dependencies);

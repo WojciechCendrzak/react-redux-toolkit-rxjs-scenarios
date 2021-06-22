@@ -1,6 +1,20 @@
 import { combineEpics } from 'redux-observable';
-import { asyncScheduler, forkJoin, from, fromEventPattern, of } from 'rxjs';
-import { filter, map, mergeMap, switchMap, throttleTime } from 'rxjs/operators';
+import {
+  asyncScheduler,
+  EMPTY,
+  forkJoin,
+  from,
+  fromEventPattern,
+  of,
+} from 'rxjs';
+import {
+  catchError,
+  filter,
+  map,
+  mergeMap,
+  switchMap,
+  throttleTime,
+} from 'rxjs/operators';
 import { RootEpic } from './app.epics.type';
 import { appSlice } from './app.slice';
 
@@ -105,11 +119,30 @@ export const searchProduct$: RootEpic = (action$, _, { api }) =>
     map((response) => appSlice.actions.setProducts({ products: response }))
   );
 
+export const fetchProductWithSimpleErrorHandler$: RootEpic = (
+  action$,
+  _,
+  { api }
+) =>
+  action$.pipe(
+    filter(appSlice.actions.fetchProduct.match),
+    mergeMap((action) =>
+      from(api.fetchProduct(action.payload.id)).pipe(
+        catchError((error: Error) => {
+          // console.log(`Error message: ${error.message}`);
+          return EMPTY;
+        })
+      )
+    ),
+    map((product) => appSlice.actions.setProduct({ product }))
+  );
+
 export const appEpic$ = combineEpics(
   ping$,
   pong$,
   fetchUser$,
   login$,
   uploadPhotos$,
-  startListeningFromWebSocket$
+  startListeningFromWebSocket$,
+  fetchProductWithSimpleErrorHandler$
 );
