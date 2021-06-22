@@ -1,4 +1,4 @@
-import { appSlice } from './app.slice';
+import { appSlice } from '../app.slice';
 import { Epic } from 'redux-observable';
 import { from, Observable, of } from 'rxjs';
 import { eachValueFrom } from 'rxjs-for-await';
@@ -10,9 +10,9 @@ import {
   logout$,
   fetchProduct$,
   startListeningFromWebSocket$,
-} from './app.epic';
-import { Product, User } from './app.model';
-import { fakeAsync } from '../logic/fakeAsync';
+} from '../app.epic';
+import { Product, User } from '../app.model';
+import { fakeAsync } from '../../logic/fakeAsync';
 import WS from 'jest-websocket-mock';
 
 const {

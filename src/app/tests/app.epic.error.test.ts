@@ -1,11 +1,11 @@
-import { appSlice } from './app.slice';
+import { appSlice } from '../app.slice';
 import { Epic } from 'redux-observable';
 import { Observable, of } from 'rxjs';
 import { eachValueFrom } from 'rxjs-for-await';
-import { fetchProduct$, fetchProductWithSimpleErrorHandler$ } from './app.epic';
+import { fetchProduct$, fetchProductWithSimpleErrorHandler$ } from '../app.epic';
 import { TestScheduler } from 'rxjs/testing';
-import { Product } from './app.model';
-import { fakeAsync } from '../logic/fakeAsync';
+import { Product } from '../app.model';
+import { fakeAsync } from '../../logic/fakeAsync';
 
 const {
   actions: { setProduct, fetchProduct },

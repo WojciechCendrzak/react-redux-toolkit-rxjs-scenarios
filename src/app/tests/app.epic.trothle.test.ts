@@ -1,10 +1,10 @@
-import { appSlice } from './app.slice';
+import { appSlice } from '../app.slice';
 import { Epic, StateObservable } from 'redux-observable';
 import { asyncScheduler, Observable, of } from 'rxjs';
 import { eachValueFrom } from 'rxjs-for-await';
-import { login$, searchProduct$, loginThrottle$ } from './app.epic';
-import { User } from './app.model';
-import { fakeAsync } from '../logic/fakeAsync';
+import { login$, searchProduct$, loginThrottle$ } from '../app.epic';
+import { User } from '../app.model';
+import { fakeAsync } from '../../logic/fakeAsync';
 import { TestScheduler } from 'rxjs/testing';
 import { throttleTime } from 'rxjs/operators';
 
