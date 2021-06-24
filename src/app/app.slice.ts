@@ -7,6 +7,7 @@ export interface AppState {
   producById: Record<string, Product>;
   messages: string[];
   products?: Product[];
+  selectedProduct?: Product;
 }
 
 export const initialAppState: AppState = {
@@ -33,6 +34,16 @@ export const appSlice = createSlice({
     setProduct: (state, action: PayloadAction<{ product: Product }>) => {
       const { product } = action.payload;
       state.producById[product.id] = product;
+    },
+    fetchSelectedProduct: (
+      _state,
+      _action: PayloadAction<{ id: string }>
+    ) => {},
+    setSelectedProduct: (
+      state,
+      action: PayloadAction<{ product: Product }>
+    ) => {
+      state.selectedProduct = action.payload.product;
     },
     uploadPhotos: (_state, _action: PayloadAction<{ files: File[] }>) => {},
     setPhotos: (state, action: PayloadAction<{ photoUrls: string[] }>) => {
