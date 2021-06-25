@@ -32,7 +32,7 @@ const {
     fetchSelectedProduct,
     setSelectedProduct,
     startListeningFromWebSocket,
-    setMessage,
+    appendMessage,
   },
 } = appSlice;
 
@@ -191,8 +191,8 @@ describe('web socket recieiving', () => {
       api: { startWebSocketClient: () => new WebSocket(WEB_SOCKET_URL) },
     };
     const expected = [
-      setMessage({ message: 'message 1' }),
-      setMessage({ message: 'message 2' }),
+      appendMessage({ message: 'message 1' }),
+      appendMessage({ message: 'message 2' }),
     ];
     const output$ = startListeningFromWebSocket$(
       from(input),

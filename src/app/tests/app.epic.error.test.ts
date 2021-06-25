@@ -2,7 +2,11 @@ import { appSlice } from '../app.slice';
 import { Epic } from 'redux-observable';
 import { Observable, of } from 'rxjs';
 import { eachValueFrom } from 'rxjs-for-await';
-import { fetchProduct$, fetchProductWithSimpleErrorHandler$ } from '../app.epic';
+import {
+  fetchProduct$,
+  fetchProductManaged$,
+  fetchProductWithSimpleErrorHandler$,
+} from '../app.epic';
 import { TestScheduler } from 'rxjs/testing';
 import { Product } from '../app.model';
 import { fakeAsync } from '../../logic/fakeAsync';
@@ -278,6 +282,45 @@ describe('error handling', () => {
 
     const output = await getEpicOutput(
       fetchProductWithSimpleErrorHandler$,
+      input,
+      null,
+      dependencies
+    );
+
+    expect(JSON.stringify(output, null, 2)).toBe(
+      JSON.stringify(expected, null, 2)
+    );
+  });
+
+  test(`${fetchProductManaged$.name} 4`, async () => {
+    const input = [
+      fetchProduct({ id: '1' }),
+      fetchProduct({ id: '2' }),
+      fetchProduct({ id: '3' }),
+    ];
+
+    const dependencies = {
+      api: {
+        fetchProduct: (id: string) => {
+          switch (id) {
+            case '1':
+              return fakeAsync(product1);
+            case '2':
+              return fakeAsync('Some API error', true);
+            case '3':
+              return fakeAsync(product3);
+          }
+        },
+      },
+    };
+
+    const expected = [
+      setProduct({ product: product1 }),
+      setProduct({ product: product3 }),
+    ];
+
+    const output = await getEpicOutput(
+      fetchProductManaged$,
       input,
       null,
       dependencies

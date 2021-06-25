@@ -15,6 +15,7 @@ import {
   switchMap,
   throttleTime,
 } from 'rxjs/operators';
+import { managed } from '../operators/managed.operator';
 import { RootEpic } from './app.epics.type';
 import { appSlice } from './app.slice';
 
@@ -36,7 +37,7 @@ export const fetchSelectedProduct$: RootEpic = (actions$, _, { api }) =>
     map((product) => appSlice.actions.setSelectedProduct({ product }))
   );
 
-// 3. fetching in sequence - next input depends on previous output
+// 3. Calling API sequentially
 export const login$: RootEpic = (actions$, _, { api }) =>
   actions$.pipe(
     filter(appSlice.actions.login.match),
@@ -45,7 +46,7 @@ export const login$: RootEpic = (actions$, _, { api }) =>
     map((user) => appSlice.actions.setUser({ user }))
   );
 
-// 4. fetching in parallel
+// 4. Calling API parallelly
 export const uploadPhotos$: RootEpic = (actions$, _, { api }) =>
   actions$.pipe(
     filter(appSlice.actions.uploadPhotos.match),
@@ -53,41 +54,39 @@ export const uploadPhotos$: RootEpic = (actions$, _, { api }) =>
     switchMap((files) =>
       forkJoin(files.map((file) => from(api.uploadPhoto(file))))
     ),
-    map((results) =>
+    map((responses) =>
       appSlice.actions.setPhotos({
-        photoUrls: results.map((result) => result.url),
+        photoUrls: responses.map((result) => result.url),
       })
     )
   );
 
-// 5. return more than one result
+// 5. Emitting more than one action from epic
 export const logout$: RootEpic = (actions$, _, { api }) =>
   actions$.pipe(
     filter(appSlice.actions.logout.match),
     switchMap(() => from(api.logout())),
-    // TODO: maybe just concat map
     switchMap(() =>
       of(appSlice.actions.reset(), appSlice.actions.navigateHome())
     )
   );
 
-// 6. Websocket listener
+// 6. WebSocket listening
 export const startListeningFromWebSocket$: RootEpic = (actions$, _, { api }) =>
   actions$.pipe(
     filter(appSlice.actions.startListeningFromWebSocket.match),
     map(() => api.startWebSocketClient()),
-    // mamybe just flatMap ???
-    mergeMap((webSocketClient) =>
+    switchMap((webSocketClient) =>
       fromEventPattern<MessageEvent<string>>(
         (handler) => webSocketClient.addEventListener('message', handler),
         (handler) => webSocketClient.removeEventListener('message', handler)
       )
     ),
     map((event) => event.data),
-    map((message) => appSlice.actions.setMessage({ message }))
+    map((message) => appSlice.actions.appendMessage({ message }))
   );
 
-// 7. avoid multiply clicking
+// 7. Avoiding multiply button click
 export const loginThrottle$: RootEpic = (actions$, _, { api }) =>
   actions$.pipe(
     filter(appSlice.actions.login.match),
@@ -97,7 +96,7 @@ export const loginThrottle$: RootEpic = (actions$, _, { api }) =>
     map((user) => appSlice.actions.setUser({ user }))
   );
 
-// 8. live search optimisation
+// 8. Live search optimizing
 export const searchProduct$: RootEpic = (actions$, _, { api }) =>
   actions$.pipe(
     filter(appSlice.actions.searchProduct.match),
@@ -129,6 +128,12 @@ export const fetchProductWithSimpleErrorHandler$: RootEpic = (
   );
 
 // 10. Bit advanced error handling
+export const fetchProductManaged$: RootEpic = (actions$, _, { api }) =>
+  actions$.pipe(
+    filter(appSlice.actions.fetchProduct.match),
+    managed(mergeMap((action) => from(api.fetchProduct(action.payload.id)))),
+    map((product) => appSlice.actions.setProduct({ product }))
+  );
 
 export const ping$: RootEpic = (actions$) =>
   actions$.pipe(

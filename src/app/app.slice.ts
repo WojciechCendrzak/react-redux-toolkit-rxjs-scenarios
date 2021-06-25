@@ -53,7 +53,7 @@ export const appSlice = createSlice({
     reset: () => initialAppState,
     navigateHome: () => {},
     startListeningFromWebSocket: () => {},
-    setMessage: (state, action: PayloadAction<{ message: string }>) => {
+    appendMessage: (state, action: PayloadAction<{ message: string }>) => {
       state.messages.push(action.payload.message);
     },
     searchProduct: (
